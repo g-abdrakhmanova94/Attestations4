@@ -40,7 +40,7 @@ public class TestSuite {
 
         // Используем стабильную версию Firefox
         WebDriverManager.firefoxdriver()
-                .browserVersion("120") // или "115" (ESR)
+                .browserVersion("115")
                 .setup();
 
         FirefoxOptions options = new FirefoxOptions();
