@@ -1,157 +1,39 @@
-name: Java CI with Allure Report
+name: Run Tests & Generate Report
 
-on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+on: push
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
-
-      - name: Install Firefox and GUI dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            firefox \
-            libgtk-3-0 \
-            libdbus-glib-1-2 \
-            xvfb \
-            libxt6 \
-            libxss1 \
-            libasound2
-
-      - name: Install Allure CLI
-        run: |
-          # Устанавливаем Allure правильно
-          wget https://github.com/allure-framework/allure2/releases/download/2.29.1/allure-2.29.1.tgz
-          sudo tar -zxvf allure-2.29.1.tgz -C /opt/
-          sudo ln -sf /opt/allure-2.29.1/bin/allure /usr/bin/allure
-          allure --version
-
-      - name: Debug project structure
-        run: |
-          echo "=== Project structure ==="
-          find . -name "*.java" | head -10
-          echo "=== Target directory before tests ==="
-          ls -la target/ || echo "No target directory"
-
-      - name: Run tests with Xvfb
-        run: |
-          xvfb-run -a mvn clean test
-          
-      - name: Check Allure results after tests
-        if: always()
-        run: |
-          echo "=== Checking Allure results ==="
-          if [ -d "target/allure-results" ]; then
-            echo "Allure results directory exists"
-            ls -la target/allure-results/
-            echo "File count: $(ls -1 target/allure-results/ | wc -l)"
-            if [ "$(ls -A target/allure-results)" ]; then
-              echo "Allure results found:"
-              find target/allure-results/ -name "*.json" -o -name "*.txt" | head -10
-            else
-              echo "Allure results directory is empty"
-            fi
-          else
-            echo "No allure-results directory found"
-            # Создаем тестовые данные для отладки
-            mkdir -p target/allure-results
-            echo '{"name": "test", "status": "passed"}' > target/allure-results/debug-result.json
-          fi
-
-      - name: Generate Allure Report
-        if: always()
-        run: |
-          echo "=== Generating Allure Report ==="
-          
-          # Проверяем есть ли реальные результаты
-          if [ -d "target/allure-results" ] && [ "$(find target/allure-results -name '*.json' | head -1)" ]; then
-            echo "Generating Allure report from real test results..."
-            allure generate target/allure-results -o allure-report --clean
-            echo "✅ Report generated from test results"
-          else
-            echo "No test results found, generating demo report..."
-            # Создаем демо-отчет с тестовыми данными
-            mkdir -p demo-results
-            cat > demo-results/demo-test.json << 'EOF'
-            {
-              "name": "Demo Test",
-              "status": "passed",
-              "steps": [
-                {
-                  "name": "Step 1",
-                  "status": "passed"
-                }
-              ]
-            }
-            EOF
-            allure generate demo-results -o allure-report --clean
-            echo "📋 Demo report generated"
-          fi
-          
-          echo "=== Final report structure ==="
-          ls -la allure-report/
-          if [ -f "allure-report/index.html" ]; then
-            echo "✅ index.html found - report should work!"
-            # Проверяем содержимое index.html
-            head -20 allure-report/index.html
-          else
-            echo "❌ index.html missing - creating fallback"
-            mkdir -p allure-report
-            cat > allure-report/index.html << 'EOF'
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Allure Test Report</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 40px; }
-                    .container { max-width: 800px; margin: 0 auto; }
-                    .success { color: green; }
-                    .warning { color: orange; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <h1>🧪 Allure Test Report</h1>
-                    <p class="success">✅ Report is working!</p>
-                    <p>This is a functional Allure report.</p>
-                    <p>If tests ran successfully, you should see test results here.</p>
-                    <p class="warning">Note: This page confirms the report is accessible (no 404).</p>
-                </div>
-            </body>
-            </html>
-            EOF
-          fi
-
-      - name: Upload Allure Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-report
-          path: allure-report/
-          retention-days: 30
-
-      - name: Show final debug info
-        if: always()
-        run: |
-          echo "=== FINAL DEBUG INFO ==="
-          echo "Allure report files:"
-          find allure-report/ -type f -name "*.html" -o -name "*.js" -o -name "*.css" | head -10
-          echo "Allure report size:"
-          du -sh allure-report/ || echo "No report directory"
-          echo "=== WORKFLOW COMPLETE ==="
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - run: mvn clean test
+    
+    - name: Archive Allure results
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-results
+        path: target/allure-results
+        
+    - name: Generate Allure Report
+      uses: simple-elf/allure-report-action@master
+      if: always()
+      with:
+        allure_results: target/allure-results
+        allure_report: allure-report
+        keep_reports: 20
+        
+    - name: Upload Allure Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: allure-report
+        path: allure-report
+        retention-days: 30
