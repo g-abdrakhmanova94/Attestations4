@@ -22,10 +22,10 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Setup Firefox
-      uses: browser-actions/setup-firefox@v1
-      with:
-        firefox-version: 'latest'
+    - name: Install Firefox
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y firefox
 
     - name: Install Allure
       run: |
@@ -34,8 +34,10 @@ jobs:
         unzip allure.zip -d /opt/allure
         sudo ln -s /opt/allure/allure-2.25.0/bin/allure /usr/bin/allure
 
-    - name: Run tests
-      run: mvn clean test
+    - name: Setup Xvfb
+      uses: GabrielBB/xvfb-action@v1
+      with:
+        run: mvn clean test
       env:
         ALLURE_RESULTS_DIR: target/allure-results
 
