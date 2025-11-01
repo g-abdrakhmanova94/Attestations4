@@ -22,15 +22,10 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Install Firefox (latest)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y firefox
-
-    - name: Install Geckodriver using WebDriverManager
-      run: |
-        # Установка последней версии Geckodriver через WebDriverManager
-        mvn exec:java -Dexec.mainClass="io.github.bonigarcia.webdrivermanager.WebDriverManager" -Dexec.args="firefoxdriver" -q
+    - name: Setup Firefox
+      uses: browser-actions/setup-firefox@v1
+      with:
+        firefox-version: 'latest'
 
     - name: Install Allure
       run: |
@@ -39,14 +34,10 @@ jobs:
         unzip allure.zip -d /opt/allure
         sudo ln -s /opt/allure/allure-2.25.0/bin/allure /usr/bin/allure
 
-    - name: Run tests with WebDriverManager
+    - name: Run tests
       run: mvn clean test
       env:
         ALLURE_RESULTS_DIR: target/allure-results
-
-    - name: List Allure Results Files
-      run: ls -la target/allure-results/
-      if: always()
 
     - name: Generate Allure Report
       run: |
