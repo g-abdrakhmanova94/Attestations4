@@ -22,46 +22,35 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Install Firefox
+    - name: Install Firefox ESR
       run: |
         sudo apt-get update
-        # Устанавливаем Firefox из официального репозитория
-        sudo apt-get install -y firefox
-        firefox --version
+        sudo apt-get remove -y firefox
+        # Устанавливаем Firefox ESR
+        sudo apt-get install -y firefox-esr
+        firefox-esr --version
 
-    - name: Install system dependencies for Firefox
+    - name: Install dependencies
       run: |
-        # Устанавливаем только необходимые зависимости
-        sudo apt-get install -y libgtk-3-0 libdbus-glib-1-2 libx11-xcb1 libxtst6 libxrender1
-        # Для Ubuntu 24.04 используем правильное имя пакета
-        sudo apt-get install -y libasound2t64 || sudo apt-get install -y libasound2
+        sudo apt-get install -y libgtk-3-0 libdbus-glib-1-2 libx11-xcb1 libxtst6 libxrender1 libasound2t64
 
-    - name: Download and setup Allure
+    - name: Install Allure
       run: |
-        # Скачиваем Allure
         wget -O allure-2.25.0.tgz https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.tgz
-        # Распаковываем
         sudo tar -xzf allure-2.25.0.tgz -C /opt/
-        # Создаем симлинк
         sudo ln -sf /opt/allure-2.25.0/bin/allure /usr/local/bin/allure
-        # Проверяем
-        allure --version
 
     - name: Run tests
       run: |
-        # Устанавливаем переменные окружения для Firefox
         export MOZ_HEADLESS=1
-        export MOZ_HEADLESS_WIDTH=1920
-        export MOZ_HEADLESS_HEIGHT=1080
-        # Запускаем тесты
         mvn clean test
       env:
-        ALLURE_RESULTS_DIR: target/allure-results
+        ALLURE_RESULTS_DIR: allure-results
 
     - name: Generate Allure Report
       run: |
         mkdir -p allure-report
-        allure generate --clean target/allure-results -o allure-report
+        allure generate --clean allure-results -o allure-report
       if: always()
 
     - name: Upload Allure Report as artifact
