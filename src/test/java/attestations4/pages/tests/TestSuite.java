@@ -7,7 +7,7 @@ import io.qameta.allure.Description;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
@@ -31,11 +31,12 @@ public class TestSuite {
      * Метод настройки перед каждым тестом
      * Инициализирует WebDriver и Page Objects
      */
+
     @BeforeEach
     public void setUp() {
         // Указываем правильный путь для сохранения результатов Allure
         System.setProperty("allure.results.directory", "target/allure-results");
-        driver = new FirefoxDriver();
+        driver = new EdgeDriver();
         authPage = new AuthPage(driver);
         productPage = new ProductPage(driver);
         cartPage = new CartPage(driver);
