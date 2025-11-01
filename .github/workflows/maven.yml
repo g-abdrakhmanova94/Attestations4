@@ -30,8 +30,10 @@ jobs:
             libdbus-glib-1-2 \
             xvfb \
             libxt6t64 \
-            libxss1t64 \
+            libxss1 \
             libasound2t64
+
+        
 
       # 🔥 Запуск через xvfb — ОБЯЗАТЕЛЬНО
       - name: Run tests with Xvfb
