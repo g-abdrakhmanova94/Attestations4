@@ -22,36 +22,31 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Install Firefox ESR
+    - name: Install Firefox
       run: |
         sudo apt-get update
-        sudo apt-get remove -y firefox
-        # Устанавливаем Firefox ESR
-        sudo apt-get install -y firefox-esr
-        firefox-esr --version
-
-    - name: Install dependencies
-      run: |
-        sudo apt-get install -y libgtk-3-0 libdbus-glib-1-2 libx11-xcb1 libxtst6 libxrender1 libasound2t64
+        sudo apt-get install -y firefox
+        firefox --version
 
     - name: Install Allure
       run: |
-        wget -O allure-2.25.0.tgz https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.tgz
+        # Скачиваем Allure
+        wget -q -O allure-2.25.0.tgz https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.tgz
+        # Распаковываем
         sudo tar -xzf allure-2.25.0.tgz -C /opt/
-        sudo ln -sf /opt/allure-2.25.0/bin/allure /usr/local/bin/allure
+        # Добавляем в PATH
+        echo "/opt/allure-2.25.0/bin" >> $GITHUB_PATH
 
     - name: Run tests
       run: |
         export MOZ_HEADLESS=1
         mvn clean test
       env:
-        ALLURE_RESULTS_DIR: allure-results
+        ALLURE_RESULTS_DIR: target/allure-results
 
     - name: Generate Allure Report
       run: |
-        mkdir -p allure-report
-        allure generate --clean allure-results -o allure-report
-      if: always()
+        allure generate --clean target/allure-results -o allure-report
 
     - name: Upload Allure Report as artifact
       uses: actions/upload-artifact@v4
@@ -59,7 +54,6 @@ jobs:
         name: allure-report
         path: allure-report/
         retention-days: 30
-      if: always()
 
   deploy:
     runs-on: ubuntu-latest
@@ -75,14 +69,10 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
     - name: Download Allure Report
       uses: actions/download-artifact@v4
       with:
         name: allure-report
-        path: allure-report
 
     - name: Setup Pages
       uses: actions/configure-pages@v4
@@ -90,7 +80,7 @@ jobs:
     - name: Upload to GitHub Pages
       uses: actions/upload-pages-artifact@v3
       with:
-        path: 'allure-report'
+        path: allure-report
 
     - name: Deploy to GitHub Pages
       id: deployment
