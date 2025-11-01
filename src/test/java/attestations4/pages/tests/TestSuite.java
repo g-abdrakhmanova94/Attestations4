@@ -36,23 +36,22 @@ public class TestSuite {
      */
     @BeforeEach
     public void setUp() {
-        // Указываем правильный путь для сохранения результатов Allure
-        System.setProperty("allure.results.directory", "src/allure-results");
+        System.setProperty("allure.results.directory", "target/allure-results");
 
-        // Используем WebDriverManager для Firefox
-        WebDriverManager.firefoxdriver().setup();
+        // Используем стабильную версию Firefox
+        WebDriverManager.firefoxdriver()
+                .browserVersion("120") // или "115" (ESR)
+                .setup();
 
-        // Минимальная настройка Firefox options
         FirefoxOptions options = new FirefoxOptions();
         options.addArguments("--headless");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--window-size=1920,1080");
 
         driver = new FirefoxDriver(options);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
         driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
 
+        // Инициализация страниц
         authPage = new AuthPage(driver);
         productPage = new ProductPage(driver);
         cartPage = new CartPage(driver);
