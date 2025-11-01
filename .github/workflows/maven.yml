@@ -1,55 +1,82 @@
-name: Java CI with Allure Report
+name: Run Tests & Generate Report
 
-on:
-  push:
-    branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+on: push
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
-
-      # 🔥 КРИТИЧЕСКИ ВАЖНО: установить Firefox + зависимости
-      - name: Install Firefox and GUI dependencies (Ubuntu 24.04)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libgtk-3-0 \
-            libdbus-glib-1-2 \
-            xvfb \
-            libxt6t64 \
-            libxss1 \
-            libasound2t64
-
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+    
+    - name: Install Allure
+      run: |  
+        curl -o allure.zip -L https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.zip  
+        sudo apt-get install -y unzip  
+        unzip allure.zip -d /opt/allure  
+        sudo ln -s /opt/allure/allure-2.25.0/bin/allure /usr/bin/allure 
+    
+    - name: Run tests
+      run: mvn clean test
+    
+    - name: Generate Allure Report with correct base path
+      run: |  
+        mkdir -p allure-report  
+        allure generate --clean target/allure-results -o allure-report --base-path /
+    
+    - name: Create standalone report
+      run: |
+        # Создаем .nojekyll файл для GitHub Pages совместимости
+        touch allure-report/.nojekyll
         
-
-      # 🔥 Запуск через xvfb — ОБЯЗАТЕЛЬНО
-      - name: Run tests with Xvfb
-        run: xvfb-run -a mvn test
-
-      # Генерация отчёта
-      - name: Generate Allure Report
-        uses: simple-elf/allure-report-action@master
-        if: always()
-        with:
-          allure_results: target/allure-results
-          allure_report: allure-report
-          keep_reports: 20
-
-      - name: Upload Allure Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: allure-report
-          path: allure-report/
+        # Создаем инструкцию по открытию
+        cat > allure-report/README.html << 'EOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>How to open Allure Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                code { background: #f4f4f4; padding: 10px; display: block; }
+            </style>
+        </head>
+        <body>
+            <h1>📊 Allure Test Report</h1>
+            <h2>To view this report correctly:</h2>
+            
+            <h3>Option 1: Using Python</h3>
+            <code>
+            cd allure-report<br>
+            python3 -m http.server 8000<br>
+            Then open: <a href="http://localhost:8000">http://localhost:8000</a>
+            </code>
+            
+            <h3>Option 2: Using Node.js</h3>
+            <code>
+            cd allure-report<br>
+            npx http-server -p 8080<br>
+            Then open: <a href="http://localhost:8080">http://localhost:8080</a>
+            </code>
+            
+            <h3>Option 3: Using Allure CLI</h3>
+            <code>
+            allure serve allure-report/
+            </code>
+            
+            <p><strong>Note:</strong> Do NOT open index.html directly in browser!</p>
+        </body>
+        </html>
+        EOF
+    
+    - name: Upload Allure Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: allure-report
+        path: allure-report
+        retention-days: 30
