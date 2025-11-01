@@ -22,11 +22,10 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Install Firefox
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y firefox
-        firefox --version
+   - name: Install Firefox and dependencies
+  run: |
+    sudo apt-get update
+    sudo apt-get install -y firefox libgtk-3-0 libdbus-glib-1-2 xvfb
 
     - name: Install Allure
       run: |
@@ -37,16 +36,12 @@ jobs:
         # Добавляем в PATH
         echo "/opt/allure-2.25.0/bin" >> $GITHUB_PATH
 
-    - name: Run tests
-      run: |
-        export MOZ_HEADLESS=1
-        mvn clean test
-      env:
-        ALLURE_RESULTS_DIR: target/allure-results
+    - name: Run tests with virtual display
+  run: xvfb-run -a mvn test
 
     - name: Generate Allure Report
       run: |
-        allure generate --clean target/allure-results -o allure-report
+        allure generate --clean allure-results -o allure-report
 
     - name: Upload Allure Report as artifact
       uses: actions/upload-artifact@v4
