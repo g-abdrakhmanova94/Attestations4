@@ -42,67 +42,21 @@ public class TestSuite {
         // Используем WebDriverManager для Firefox
         WebDriverManager.firefoxdriver().setup();
 
-        // Детальная настройка Firefox options для решения проблемы Marionette
+        // Минимальная настройка Firefox options
         FirefoxOptions options = new FirefoxOptions();
-
-        // Основные настройки (УБИРАЕМ --marionette)
         options.addArguments("--headless");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--disable-gpu");
         options.addArguments("--window-size=1920,1080");
 
-        // Отключаем все ненужное
-        options.addArguments("--disable-extensions");
-        options.addArguments("--disable-plugins");
-        options.addArguments("--disable-default-apps");
-        options.addArguments("--disable-web-security");
-        options.addArguments("--allow-running-insecure-content");
+        driver = new FirefoxDriver(options);
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
 
-        // Настройки предпочтений для стабильности (УБИРАЕМ marionette.port)
-        options.addPreference("marionette.log.level", "Info");
-        options.addPreference("remote.active-protocols", 2);
-        options.addPreference("network.http.use-cache", false);
-        options.addPreference("browser.cache.disk.enable", false);
-        options.addPreference("browser.cache.memory.enable", false);
-        options.addPreference("browser.sessionstore.resume_from_crash", false);
-
-        // Оптимизации для CI
-        options.addPreference("dom.ipc.processCount", 1);
-        options.addPreference("browser.tabs.remote.autostart", false);
-        options.addPreference("browser.tabs.remote.autostart.2", false);
-        options.addPreference("browser.startup.homepage", "about:blank");
-        options.addPreference("startup.homepage_welcome_url", "about:blank");
-        options.addPreference("startup.homepage_welcome_url.additional", "about:blank");
-
-        // Безопасность
-        options.addPreference("dom.disable_beforeunload", true);
-        options.addPreference("dom.max_script_run_time", 30);
-
-        // Устанавливаем таймауты
-        options.setImplicitWaitTimeout(Duration.ofSeconds(10));
-        options.setPageLoadTimeout(Duration.ofSeconds(30));
-
-        try {
-            System.out.println("Starting Firefox driver with options: " + options);
-            driver = new FirefoxDriver(options);
-
-            // Дополнительные настройки драйвера
-            driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-            driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(30));
-            driver.manage().timeouts().scriptTimeout(Duration.ofSeconds(30));
-
-            authPage = new AuthPage(driver);
-            productPage = new ProductPage(driver);
-            cartPage = new CartPage(driver);
-            selectionPage = new SelectionPage(driver);
-
-            System.out.println("Firefox driver started successfully");
-        } catch (Exception e) {
-            System.err.println("Error initializing Firefox driver: " + e.getMessage());
-            e.printStackTrace();
-            throw e;
-        }
+        authPage = new AuthPage(driver);
+        productPage = new ProductPage(driver);
+        cartPage = new CartPage(driver);
+        selectionPage = new SelectionPage(driver);
     }
 
     @DisplayName("Успешная авторизация под пользователем 'standard_user'")
