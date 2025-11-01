@@ -2,6 +2,7 @@ import attestations4.pages.AuthPage;
 import attestations4.pages.CartPage;
 import attestations4.pages.ProductPage;
 import attestations4.pages.SelectionPage;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import io.qameta.allure.Description;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.By;
@@ -34,6 +35,10 @@ public class TestSuite {
     public void setUp() {
         // Указываем правильный путь для сохранения результатов Allure
         System.setProperty("allure.results.directory", "src/allure-results");
+
+        // Используем WebDriverManager для автоматического управления драйверами
+        WebDriverManager.firefoxdriver().setup();
+
         driver = new FirefoxDriver();
         authPage = new AuthPage(driver);
         productPage = new ProductPage(driver);
