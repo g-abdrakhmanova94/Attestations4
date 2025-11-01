@@ -13,26 +13,31 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        
-    - run: mvn clean test
+        cache: maven 
     
-    - name: Archive Allure results
-      uses: actions/upload-artifact@v4
-      with:
-        name: allure-results
-        path: target/allure-results
-        
-    - name: Generate Allure Report
-      uses: simple-elf/allure-report-action@master
-      if: always()
-      with:
-        allure_results: target/allure-results
-        allure_report: allure-report
-        keep_reports: 20
-        
+    - name: Install Allure 
+      run: |  
+        curl -o allure.zip -L https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.zip  
+        sudo apt-get install -y unzip  
+        unzip allure.zip -d /opt/allure  
+        sudo ln -s /opt/allure/allure-2.25.0/bin/allure /usr/bin/allure 
+    
+    - name: Run tests
+      run: mvn clean test
+    
+    - name: List Allure Results Files  
+      run: find target/allure-results -name "*.json" | head -10 || echo "No results found"
+    
+    - name: Generate Allure Report  
+      run: |  
+        mkdir -p allure-report  
+        allure generate --clean target/allure-results -o allure-report
+    
+    - name: List Allure Report Files  
+      run: ls -la allure-report/ || echo "No report directory"
+    
     - name: Upload Allure Report
       uses: actions/upload-artifact@v4
-      if: always()
       with:
         name: allure-report
         path: allure-report
