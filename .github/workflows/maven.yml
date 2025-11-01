@@ -13,9 +13,9 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: maven 
+        cache: maven
     
-    - name: Install Allure 
+    - name: Install Allure
       run: |  
         curl -o allure.zip -L https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.zip  
         sudo apt-get install -y unzip  
@@ -25,16 +25,54 @@ jobs:
     - name: Run tests
       run: mvn clean test
     
-    - name: List Allure Results Files  
-      run: find target/allure-results -name "*.json" | head -10 || echo "No results found"
-    
-    - name: Generate Allure Report  
+    - name: Generate Allure Report with correct base path
       run: |  
         mkdir -p allure-report  
-        allure generate --clean target/allure-results -o allure-report
+        allure generate --clean target/allure-results -o allure-report --base-path /
     
-    - name: List Allure Report Files  
-      run: ls -la allure-report/ || echo "No report directory"
+    - name: Create standalone report
+      run: |
+        # Создаем .nojekyll файл для GitHub Pages совместимости
+        touch allure-report/.nojekyll
+        
+        # Создаем инструкцию по открытию
+        cat > allure-report/README.html << 'EOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>How to open Allure Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 40px; }
+                code { background: #f4f4f4; padding: 10px; display: block; }
+            </style>
+        </head>
+        <body>
+            <h1>📊 Allure Test Report</h1>
+            <h2>To view this report correctly:</h2>
+            
+            <h3>Option 1: Using Python</h3>
+            <code>
+            cd allure-report<br>
+            python3 -m http.server 8000<br>
+            Then open: <a href="http://localhost:8000">http://localhost:8000</a>
+            </code>
+            
+            <h3>Option 2: Using Node.js</h3>
+            <code>
+            cd allure-report<br>
+            npx http-server -p 8080<br>
+            Then open: <a href="http://localhost:8080">http://localhost:8080</a>
+            </code>
+            
+            <h3>Option 3: Using Allure CLI</h3>
+            <code>
+            allure serve allure-report/
+            </code>
+            
+            <p><strong>Note:</strong> Do NOT open index.html directly in browser!</p>
+        </body>
+        </html>
+        EOF
     
     - name: Upload Allure Report
       uses: actions/upload-artifact@v4
