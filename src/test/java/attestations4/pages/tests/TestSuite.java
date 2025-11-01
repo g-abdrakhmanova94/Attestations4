@@ -39,9 +39,7 @@ public class TestSuite {
         System.setProperty("allure.results.directory", "target/allure-results");
 
         // Используем стабильную версию Firefox
-        WebDriverManager.firefoxdriver()
-                .browserVersion("115")
-                .setup();
+        WebDriverManager.firefoxdriver().setup();
 
         FirefoxOptions options = new FirefoxOptions();
         options.addArguments("--headless");
