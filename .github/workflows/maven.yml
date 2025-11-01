@@ -34,6 +34,11 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
+   
+    - name: Install Firefox
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y firefox
     
     - name: Install Allure  
       run: |  
