@@ -22,31 +22,41 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Install Firefox (latest)
+    - name: Install Firefox
       run: |
         sudo apt-get update
+        # Устанавливаем Firefox из официального репозитория
         sudo apt-get install -y firefox
+        firefox --version
 
-    - name: Install Geckodriver using WebDriverManager
+    - name: Install system dependencies for Firefox
       run: |
-        # Установка последней версии Geckodriver через WebDriverManager
-        mvn exec:java -Dexec.mainClass="io.github.bonigarcia.webdrivermanager.WebDriverManager" -Dexec.args="firefoxdriver" -q
+        # Устанавливаем только необходимые зависимости
+        sudo apt-get install -y libgtk-3-0 libdbus-glib-1-2 libx11-xcb1 libxtst6 libxrender1
+        # Для Ubuntu 24.04 используем правильное имя пакета
+        sudo apt-get install -y libasound2t64 || sudo apt-get install -y libasound2
 
-    - name: Install Allure
+    - name: Download and setup Allure
       run: |
-        curl -o allure.zip -L https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.zip
-        sudo apt-get install -y unzip
-        unzip allure.zip -d /opt/allure
-        sudo ln -s /opt/allure/allure-2.25.0/bin/allure /usr/bin/allure
+        # Скачиваем Allure
+        wget -O allure-2.25.0.tgz https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.tgz
+        # Распаковываем
+        sudo tar -xzf allure-2.25.0.tgz -C /opt/
+        # Создаем симлинк
+        sudo ln -sf /opt/allure-2.25.0/bin/allure /usr/local/bin/allure
+        # Проверяем
+        allure --version
 
-    - name: Run tests with WebDriverManager
-      run: mvn clean test
+    - name: Run tests
+      run: |
+        # Устанавливаем переменные окружения для Firefox
+        export MOZ_HEADLESS=1
+        export MOZ_HEADLESS_WIDTH=1920
+        export MOZ_HEADLESS_HEIGHT=1080
+        # Запускаем тесты
+        mvn clean test
       env:
         ALLURE_RESULTS_DIR: target/allure-results
-
-    - name: List Allure Results Files
-      run: ls -la target/allure-results/
-      if: always()
 
     - name: Generate Allure Report
       run: |
