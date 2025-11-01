@@ -31,31 +31,15 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Install Browsers
+    - name: Install Firefox
       run: |
         sudo apt-get update
-        # Устанавливаем оба браузера
         sudo apt-get install -y firefox
-        
-        # Устанавливаем Edge
-        curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft.gpg
-        echo "deb [signed-by=/usr/share/keyrings/microsoft.gpg] https://packages.microsoft.com/repos/edge stable main" | sudo tee /etc/apt/sources.list.d/microsoft-edge.list
-        sudo apt-get update
-        sudo apt-get install -y microsoft-edge-stable
-        
-        # Проверяем установку
         firefox --version
-        microsoft-edge --version
-
-    - name: Build with Maven
-      run: mvn clean compile -DskipTests
-
+        
     - name: Run tests with Firefox
       run: mvn test -Dbrowser=firefox
       
-    - name: Run tests with Edge  
-      run: mvn test -Dbrowser=edge
-
     - name: Install Allure  
       run: |  
         curl -o allure.zip -L https://github.com/allure-framework/allure2/releases/download/2.25.0/allure-2.25.0.zip  
