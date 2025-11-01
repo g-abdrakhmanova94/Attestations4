@@ -22,10 +22,16 @@ jobs:
           cache: maven
 
       # 🔥 КРИТИЧЕСКИ ВАЖНО: установить Firefox + зависимости
-      - name: Install Firefox and GUI dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y firefox libgtk-3-0 libdbus-glib-1-2 xvfb libxt6 libxss1 libasound2
+      - name: Install Firefox and GUI dependencies (Ubuntu 24.04)
+          run: |
+    sudo apt-get update
+    sudo apt-get install -y \
+      libgtk-3-0 \
+      libdbus-glib-1-2 \
+      xvfb \
+      libxt6t64 \
+      libxss1t64 \
+      libasound2t64
 
       # 🔥 Запуск через xvfb — ОБЯЗАТЕЛЬНО
       - name: Run tests with Xvfb
