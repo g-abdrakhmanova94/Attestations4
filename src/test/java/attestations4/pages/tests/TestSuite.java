@@ -1,22 +1,23 @@
-package attestations4.pages.tests;
-
 import attestations4.pages.AuthPage;
 import attestations4.pages.CartPage;
 import attestations4.pages.ProductPage;
 import attestations4.pages.SelectionPage;
-import io.github.bonigarcia.wdm.WebDriverManager;
 import io.qameta.allure.Description;
 import org.junit.jupiter.api.*;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.firefox.FirefoxProfile;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
+
 import static io.qameta.allure.Allure.step;
 import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * TestSuite - тестовый класс для автоматизации веб-приложения интернет-магазина
+ * Содержит набор тестовых сценариев для проверки функциональности авторизации и оформления заказов
+ */
 
 public class TestSuite {
     private WebDriver driver;
@@ -25,31 +26,15 @@ public class TestSuite {
     private CartPage cartPage;
     private SelectionPage selectionPage;
 
-    @BeforeAll
-    public static void setupAll() {
-        // Firefox обычно работает надежнее в CI
-        WebDriverManager.firefoxdriver().setup();
-    }
-
+    /**
+     * Метод настройки перед каждым тестом
+     * Инициализирует WebDriver и Page Objects
+     */
     @BeforeEach
     public void setUp() {
-        System.setProperty("allure.results.directory", "target/allure-results");
-
-        FirefoxOptions options = new FirefoxOptions();
-        options.addArguments("--headless");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--width=1920");
-        options.addArguments("--height=1080");
-
-        // Отключаем запоминание паролей в Firefox
-        FirefoxProfile profile = new FirefoxProfile();
-        profile.setPreference("signon.rememberSignons", false);
-        profile.setPreference("dom.webnotifications.enabled", false);
-        options.setProfile(profile);
-
-        driver = new FirefoxDriver(options);
-
+        // Указываем правильный путь для сохранения результатов Allure
+        System.setProperty("allure.results.directory", "src/allure-results");
+        driver = new FirefoxDriver();
         authPage = new AuthPage(driver);
         productPage = new ProductPage(driver);
         cartPage = new CartPage(driver);
